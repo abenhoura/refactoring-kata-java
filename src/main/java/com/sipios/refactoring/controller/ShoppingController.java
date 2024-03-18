@@ -46,9 +46,6 @@ public class ShoppingController {
                 result += product.getPrice() * it.getNb() * currentCustomerType.getFactor();
             }
         } else {
-            if (b.getItems() == null) {
-                return "0";
-            }
 
             for (int i = 0; i < b.getItems().length; i++) {
                 Item it = b.getItems()[i];
