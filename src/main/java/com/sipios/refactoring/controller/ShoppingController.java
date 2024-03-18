@@ -44,16 +44,7 @@ public class ShoppingController {
         // Compute total amount depending on the types and quantity of product and
         // if we are in winter or summer discounts periods
         if (
-            !(
-                cal.get(Calendar.DAY_OF_MONTH) < 15 &&
-                cal.get(Calendar.DAY_OF_MONTH) > 5 &&
-                cal.get(Calendar.MONTH) == 5
-            ) &&
-            !(
-                cal.get(Calendar.DAY_OF_MONTH) < 15 &&
-                cal.get(Calendar.DAY_OF_MONTH) > 5 &&
-                cal.get(Calendar.MONTH) == 0
-            )
+            !isDiscountPeriod(cal)
         ) {
             if (b.getItems() == null) {
                 return "0";
@@ -117,6 +108,19 @@ public class ShoppingController {
         }
 
         return String.valueOf(p);
+    }
+
+    private static boolean isDiscountPeriod(Calendar cal) {
+        return (
+            cal.get(Calendar.DAY_OF_MONTH) < 15 &&
+                cal.get(Calendar.DAY_OF_MONTH) > 5 &&
+                cal.get(Calendar.MONTH) == 5
+        ) ||
+            (
+                cal.get(Calendar.DAY_OF_MONTH) < 15 &&
+                    cal.get(Calendar.DAY_OF_MONTH) > 5 &&
+                    cal.get(Calendar.MONTH) == 0
+            );
     }
 
     private CustomerType getCurrentCustomerType(Body b) {
