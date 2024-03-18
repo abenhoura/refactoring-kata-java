@@ -1,17 +1,9 @@
 package com.sipios.refactoring.controller;
 
-import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
 import com.sipios.refactoring.model.Body;
 import com.sipios.refactoring.model.CustomerType;
 import com.sipios.refactoring.model.Item;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sipios.refactoring.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 @RestController
 @RequestMapping("/shopping")
@@ -43,15 +42,8 @@ public class ShoppingController {
         ) {
             for (int i = 0; i < b.getItems().length; i++) {
                 Item it = b.getItems()[i];
-
-                if (it.getType().equals("TSHIRT")) {
-                    result += 30 * it.getNb() * currentCustomerType.getFactor();
-                } else if (it.getType().equals("DRESS")) {
-                    result += 50 * it.getNb() * currentCustomerType.getFactor();
-                } else if (it.getType().equals("JACKET")) {
-                    result += 100 * it.getNb() * currentCustomerType.getFactor();
-                }
-
+                var product = Product.valueOf(it.getType());
+                result += product.getPrice() * it.getNb() * currentCustomerType.getFactor();
             }
         } else {
             if (b.getItems() == null) {
