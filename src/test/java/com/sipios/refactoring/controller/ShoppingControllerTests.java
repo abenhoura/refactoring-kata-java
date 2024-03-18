@@ -2,14 +2,36 @@ package com.sipios.refactoring.controller;
 
 import com.sipios.refactoring.UnitTest;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+import static org.mockito.Mockito.when;
 
 class ShoppingControllerTests extends UnitTest {
 
     @InjectMocks
     private ShoppingController controller;
+
+    @Mock
+    private Clock clock;
+    private static final ZonedDateTime NORMAL_PERIOD =
+        ZonedDateTime.of(2023,2,15, 12,30,0,0, ZoneId.of("GMT"));
+
+    private static final ZonedDateTime DISCOUNTS_PERIODS =
+        ZonedDateTime.of(2023,6,6, 12,30,0,0, ZoneId.of("GMT"));
+
+    @BeforeEach
+    void setUp() {
+        when(clock.getZone()).thenReturn(NORMAL_PERIOD.getZone());
+        when(clock.instant()).thenReturn(NORMAL_PERIOD.toInstant());
+    }
 
     @Test
     void shoudReturnZero() {
@@ -114,5 +136,50 @@ class ShoppingControllerTests extends UnitTest {
             ()->controller.getPrice(new Body(items, "PLATINUM_CUSTOMER")));
         Assertions.assertEquals("Price (10000.0) is too high for platinum customer", thrown.getReason());
 
+    }
+
+    @Test
+    void shoudReturn180WhenStandardCustomerAndDiscountPeriod() {
+        //given
+        var items = new Item[]{
+            new Item("TSHIRT", 1),
+            new Item("DRESS", 1),
+            new Item("JACKET", 1)
+        };
+        //when
+        when(clock.instant()).thenReturn(DISCOUNTS_PERIODS.toInstant());
+        var sut = controller.getPrice(new Body(items, "STANDARD_CUSTOMER"));
+        //then
+        Assertions.assertEquals("160.0", sut);
+    }
+
+    @Test
+    void shoudReturn90WhenPlatiniumCustomerAndDiscountPeriod() {
+        //given
+        var items = new Item[]{
+            new Item("TSHIRT", 1),
+            new Item("DRESS", 1),
+            new Item("JACKET", 1)
+        };
+        //when
+        when(clock.instant()).thenReturn(DISCOUNTS_PERIODS.toInstant());
+        var sut = controller.getPrice(new Body(items, "PLATINUM_CUSTOMER"));
+        //then
+        Assertions.assertEquals("80.0", sut);
+    }
+
+    @Test
+    void shoudReturn162WhenPremiumCustomerAndDiscountPeriod() {
+        //given
+        var items = new Item[]{
+            new Item("TSHIRT", 1),
+            new Item("DRESS", 1),
+            new Item("JACKET", 1)
+        };
+        //when
+        when(clock.instant()).thenReturn(DISCOUNTS_PERIODS.toInstant());
+        var sut = controller.getPrice(new Body(items, "PREMIUM_CUSTOMER"));
+        //then
+        Assertions.assertEquals("144.0", sut);
     }
 }

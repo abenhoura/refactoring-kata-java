@@ -1,10 +1,14 @@
 package com.sipios.refactoring.controller;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,12 +22,16 @@ public class ShoppingController {
 
     private Logger logger = LoggerFactory.getLogger(ShoppingController.class);
 
+    @Autowired
+    private Clock clock;
+
     @PostMapping
     public String getPrice(@RequestBody Body b) {
         double p = 0;
         double d;
 
-        Date date = new Date();
+        LocalDate localDate = LocalDate.now(clock);
+        Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/Paris"));
         cal.setTime(date);
 
