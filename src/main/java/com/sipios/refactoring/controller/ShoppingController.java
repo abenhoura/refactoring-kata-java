@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import com.sipios.refactoring.model.Body;
+import com.sipios.refactoring.model.CustomerType;
 import com.sipios.refactoring.model.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +39,7 @@ public class ShoppingController {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Europe/Paris"));
         cal.setTime(date);
 
-        // Compute discount for customer
-        if (b.getType().equals("STANDARD_CUSTOMER")) {
-            d = 1;
-        } else if (b.getType().equals("PREMIUM_CUSTOMER")) {
-            d = 0.9;
-        } else if (b.getType().equals("PLATINUM_CUSTOMER")) {
-            d = 0.5;
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
+        var currentCustomerType = getCurrentCustomerType(b);
 
         // Compute total amount depending on the types and quantity of product and
         // if we are in winter or summer discounts periods
@@ -71,11 +63,11 @@ public class ShoppingController {
                 Item it = b.getItems()[i];
 
                 if (it.getType().equals("TSHIRT")) {
-                    p += 30 * it.getNb() * d;
+                    p += 30 * it.getNb() * currentCustomerType.getFactor();
                 } else if (it.getType().equals("DRESS")) {
-                    p += 50 * it.getNb() * d;
+                    p += 50 * it.getNb() * currentCustomerType.getFactor();
                 } else if (it.getType().equals("JACKET")) {
-                    p += 100 * it.getNb() * d;
+                    p += 100 * it.getNb() * currentCustomerType.getFactor();
                 }
                 // else if (it.getType().equals("SWEATSHIRT")) {
                 //     price += 80 * it.getNb();
@@ -90,11 +82,11 @@ public class ShoppingController {
                 Item it = b.getItems()[i];
 
                 if (it.getType().equals("TSHIRT")) {
-                    p += 30 * it.getNb() * d;
+                    p += 30 * it.getNb() * currentCustomerType.getFactor();
                 } else if (it.getType().equals("DRESS")) {
-                    p += 50 * it.getNb() * 0.8 * d;
+                    p += 50 * it.getNb() * 0.8 * currentCustomerType.getFactor();
                 } else if (it.getType().equals("JACKET")) {
-                    p += 100 * it.getNb() * 0.9 * d;
+                    p += 100 * it.getNb() * 0.9 * currentCustomerType.getFactor();
                 }
                 // else if (it.getType().equals("SWEATSHIRT")) {
                 //     price += 80 * it.getNb();
@@ -125,6 +117,14 @@ public class ShoppingController {
         }
 
         return String.valueOf(p);
+    }
+
+    private CustomerType getCurrentCustomerType(Body b) {
+        try {
+            return CustomerType.valueOf(b.getType());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 }
 
