@@ -27,62 +27,47 @@ public class ShoppingController {
     private Clock clock;
 
     @PostMapping
-    public String getPrice(@RequestBody Body b) {
+    public String getPrice(@RequestBody Body body) {
 
-        if (b.getItems() == null) {
+        if (body.getItems() == null) {
             return "0";
         }
 
         double result = 0;
         Calendar cal = getCalendar();
-        var currentCustomerType = getCurrentCustomerType(b);
+        var currentCustomerType = getCurrentCustomerType(body);
 
         if (
             !isDiscountPeriod(cal)
         ) {
-            for (int i = 0; i < b.getItems().length; i++) {
-                Item it = b.getItems()[i];
-                var product = Product.valueOf(it.getType());
-                result += product.getPrice() * it.getNb() * currentCustomerType.getFactor();
-            }
+            result = calculatePrice(body.getItems(), currentCustomerType, false);
         } else {
-
-            for (int i = 0; i < b.getItems().length; i++) {
-                Item it = b.getItems()[i];
-
-                if (it.getType().equals("TSHIRT")) {
-                    result += 30 * it.getNb() * currentCustomerType.getFactor();
-                } else if (it.getType().equals("DRESS")) {
-                    result += 50 * it.getNb() * 0.8 * currentCustomerType.getFactor();
-                } else if (it.getType().equals("JACKET")) {
-                    result += 100 * it.getNb() * 0.9 * currentCustomerType.getFactor();
-                }
-            }
+            result = calculatePrice(body.getItems(), currentCustomerType, true);
         }
 
         try {
-            if (b.getType().equals("STANDARD_CUSTOMER")) {
-                if (result > 200) {
-                    throw new Exception("Price (" + result + ") is too high for standard customer");
-                }
-            } else if (b.getType().equals("PREMIUM_CUSTOMER")) {
-                if (result > 800) {
-                    throw new Exception("Price (" + result + ") is too high for premium customer");
-                }
-            } else if (b.getType().equals("PLATINUM_CUSTOMER")) {
-                if (result > 2000) {
-                    throw new Exception("Price (" + result + ") is too high for platinum customer");
-                }
-            } else {
-                if (result > 200) {
-                    throw new Exception("Price (" + result + ") is too high for standard customer");
-                }
+            if (result > currentCustomerType.getThreshold()) {
+                throw new Exception("Price (" + result + ") is too high for " + currentCustomerType.getType());
             }
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
         return String.valueOf(result);
+    }
+
+    private static double calculatePrice(Item[] items, CustomerType currentCustomerType, boolean applyDiscount) {
+        double result = 0;
+        for (int i = 0; i < items.length; i++) {
+            Item it = items[i];
+            var product = Product.valueOf(it.getType());
+            var finalProduct = product.getPrice() * it.getNb() * currentCustomerType.getFactor();
+            if (applyDiscount) {
+                finalProduct = finalProduct * product.getDiscount();
+            }
+            result += finalProduct;
+        }
+        return result;
     }
 
     private Calendar getCalendar() {
